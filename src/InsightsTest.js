@@ -46,6 +46,8 @@ const colorDescriptions = {
 export default function InsightsTest() {
   const [answers, setAnswers] = useState(Array(questions.length).fill(null));
   const [result, setResult] = useState(null);
+  const [userInfo, setUserInfo] = useState({ nombre: "", email: "" });
+  const [started, setStarted] = useState(false);
 
   const handleAnswer = (questionIndex, color) => {
     const newAnswers = [...answers];
@@ -58,8 +60,12 @@ export default function InsightsTest() {
       if (color) acc[color] = (acc[color] || 0) + 1;
       return acc;
     }, {});
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const percentages = Object.fromEntries(
+      Object.entries(counts).map(([color, count]) => [color, ((count / total) * 100).toFixed(1)])
+    );
     const dominantColor = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-    setResult({ dominantColor, counts });
+    setResult({ dominantColor, counts, percentages });
   };
 
   const downloadPDF = () => {
@@ -67,21 +73,61 @@ export default function InsightsTest() {
     doc.setFontSize(16);
     doc.text("Resultados del Test Insights", 20, 20);
     doc.setFontSize(12);
-    doc.text(`Color predominante: ${result.dominantColor}`, 20, 40);
-    doc.text(colorDescriptions[result.dominantColor], 20, 50, { maxWidth: 170 });
+    doc.text(`Nombre: ${userInfo.nombre}`, 20, 30);
+    doc.text(`Email: ${userInfo.email}`, 20, 40);
+    doc.text(`Color predominante: ${result.dominantColor}`, 20, 50);
+    doc.text(colorDescriptions[result.dominantColor], 20, 60, { maxWidth: 170 });
     let y = 90;
-    Object.entries(result.counts).forEach(([color, count]) => {
-      doc.text(`${color}: ${count} respuestas`, 20, y);
+    Object.entries(result.percentages).forEach(([color, percent]) => {
+      doc.text(`${color}: ${percent}%`, 20, y);
       y += 10;
     });
     doc.save("resultado-insights.pdf");
   };
 
+  if (!started) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Antes de empezar, dinos quién eres</h2>
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={userInfo.nombre}
+          onChange={(e) => setUserInfo({ ...userInfo, nombre: e.target.value })}
+          style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
+        />
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          value={userInfo.email}
+          onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+          style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
+        />
+        <button
+          onClick={() => userInfo.nombre && userInfo.email && setStarted(true)}
+          style={{ padding: '0.75rem 1.5rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Empezar test
+        </button>
+      </div>
+    );
+  }
+
+  const progress = Math.round((answers.filter(Boolean).length / questions.length) * 100);
+
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif', color: '#1f2937' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem', textAlign: 'center', color: '#111827' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center', color: '#111827' }}>
         Test de Estilo de Comunicación - Modelo Insights
       </h1>
+
+      <div style={{ marginBottom: '2rem' }}>
+        <label style={{ fontWeight: '500' }}>Progreso: {progress}%</label>
+        <div style={{ backgroundColor: '#e5e7eb', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
+          <div style={{ width: `${progress}%`, backgroundColor: '#2563eb', height: '100%' }}></div>
+        </div>
+      </div>
+
       {questions.map((q, i) => (
         <div key={q.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', backgroundColor: '#f9fafb' }}>
           <p style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Pregunta {i + 1}</p>
@@ -107,6 +153,7 @@ export default function InsightsTest() {
           </div>
         </div>
       ))}
+
       <div style={{ marginTop: '2rem', textAlign: 'center' }}>
         <button
           onClick={calculateResult}
@@ -134,8 +181,8 @@ export default function InsightsTest() {
           </p>
           <p style={{ fontStyle: 'italic', marginBottom: '1rem', color: '#374151' }}>{colorDescriptions[result.dominantColor]}</p>
           <ul style={{ marginBottom: '1rem' }}>
-            {Object.entries(result.counts).map(([color, count]) => (
-              <li key={color}>{color}: {count} respuestas</li>
+            {Object.entries(result.percentages).map(([color, percent]) => (
+              <li key={color}>{color}: {percent}%</li>
             ))}
           </ul>
           <div style={{ textAlign: 'center' }}>
