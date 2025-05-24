@@ -63,7 +63,6 @@ function interpretStyles(scores) {
   return { dominant: sorted[0][0], secondary: sorted[1][0] };
 }
 
-// Informe más detallado
 function generateReport(interpretation, scores) {
   const { dominant, secondary } = interpretation;
   return {
@@ -85,33 +84,42 @@ export default function CommunicationStylesTest() {
   const chartRef = useRef(null);
 
   const handleSelect = (answer) => {
-    setAnswers([...answers, { id: questions[step].id, answer }]);
-    setStep(step + 1);
+    setAnswers(prev => [...prev, { id: questions[step].id, answer }]);
+    setStep(prev => prev + 1);
   };
 
+  // Durante el test, mostrar barra de progreso y pregunta actual
   if (step < questions.length) {
+    const progress = Math.round((step / questions.length) * 100);
     return (
-      <div
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem' }}
-      >
-        <div style={{ width: '100%', maxWidth: 600, textAlign: 'center' }}>
-          <h2>{questions[step].text}</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {options.map(opt => (
-              <button
-                key={opt.label}
-                onClick={() => handleSelect(opt.label)}
-                style={{ padding: '0.75rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}
-              >
-                {opt.label}
-              </button>
-            ))}
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {/* Barra de progreso */}
+        <div style={{ width: '100%', backgroundColor: '#e0e0e0', height: '8px' }}>
+          <div style={{ width: `${progress}%`, backgroundColor: '#3cb44b', height: '100%', transition: 'width 0.3s' }} />
+        </div>
+        {/* Contenido centrado */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ width: '100%', maxWidth: 600, textAlign: 'center' }}>
+            <h2 style={{ marginBottom: '0.5rem' }}>{questions[step].text}</h2>
+            <p style={{ marginBottom: '1rem', color: '#666' }}>{progress}% completado</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.label}
+                  onClick={() => handleSelect(opt.label)}
+                  style={{ padding: '0.75rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Una vez completado el test, calcular y mostrar informe
   const scores = calculateScores(answers);
   const interpretation = interpretStyles(scores);
   const report = generateReport(interpretation, scores);
@@ -133,9 +141,7 @@ export default function CommunicationStylesTest() {
   };
 
   return (
-    <div
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem' }}
-    >
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem' }}>
       <h1 style={{ textAlign: 'center' }}>{report.title}</h1>
       <p style={{ textAlign: 'center' }}>{report.perfil}</p>
       <div style={{ maxWidth: 600, width: '100%' }}>
@@ -161,7 +167,10 @@ export default function CommunicationStylesTest() {
           </ResponsiveContainer>
         </div>
         <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-          <button onClick={generatePDF} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}>
+          <button
+            onClick={generatePDF}
+            style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}
+          >
             Descargar informe
           </button>
         </div>
