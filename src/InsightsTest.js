@@ -78,24 +78,27 @@ export default function InsightsTest() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '1rem' }}>
+    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif', color: '#1f2937' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem', textAlign: 'center', color: '#111827' }}>
         Test de Estilo de Comunicación - Modelo Insights
       </h1>
       {questions.map((q, i) => (
-        <div key={q.id} style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
-          <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Pregunta {i + 1}</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+        <div key={q.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', backgroundColor: '#f9fafb' }}>
+          <p style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Pregunta {i + 1}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {q.options.map((opt, j) => (
               <button
                 key={j}
                 onClick={() => handleAnswer(i, opt.color)}
                 style={{
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  border: answers[i] === opt.color ? '2px solid black' : '1px solid #ccc',
-                  backgroundColor: answers[i] === opt.color ? '#e2e8f0' : 'white',
-                  cursor: 'pointer'
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  border: answers[i] === opt.color ? '2px solid #2563eb' : '1px solid #d1d5db',
+                  backgroundColor: answers[i] === opt.color ? '#dbeafe' : 'white',
+                  cursor: 'pointer',
+                  width: '100%',
+                  fontWeight: '500',
+                  textAlign: 'left'
                 }}
               >
                 {opt.text}
@@ -104,7 +107,7 @@ export default function InsightsTest() {
           </div>
         </div>
       ))}
-      <div style={{ marginTop: '2rem' }}>
+      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
         <button
           onClick={calculateResult}
           disabled={answers.includes(null)}
@@ -114,7 +117,9 @@ export default function InsightsTest() {
             color: 'white',
             border: 'none',
             borderRadius: '6px',
-            cursor: answers.includes(null) ? 'not-allowed' : 'pointer'
+            cursor: answers.includes(null) ? 'not-allowed' : 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600'
           }}
         >
           Ver resultado
@@ -122,31 +127,34 @@ export default function InsightsTest() {
       </div>
 
       {result && (
-        <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid #ccc', borderRadius: '8px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Resultado</h2>
+        <div style={{ marginTop: '2.5rem', padding: '1.5rem', border: '1px solid #d1d5db', borderRadius: '10px', backgroundColor: '#ffffff' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem', color: '#111827' }}>Resultado</h2>
           <p style={{ marginBottom: '1rem' }}>
             Tu color predominante es: <strong>{result.dominantColor}</strong>
           </p>
-          <p style={{ fontStyle: 'italic', marginBottom: '1rem' }}>{colorDescriptions[result.dominantColor]}</p>
-          <ul>
+          <p style={{ fontStyle: 'italic', marginBottom: '1rem', color: '#374151' }}>{colorDescriptions[result.dominantColor]}</p>
+          <ul style={{ marginBottom: '1rem' }}>
             {Object.entries(result.counts).map(([color, count]) => (
               <li key={color}>{color}: {count} respuestas</li>
             ))}
           </ul>
-          <button
-            onClick={downloadPDF}
-            style={{
-              marginTop: '1rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Descargar PDF
-          </button>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={downloadPDF}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Descargar PDF
+            </button>
+          </div>
         </div>
       )}
     </div>
