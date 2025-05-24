@@ -147,7 +147,7 @@ export default function InsightsTest() {
     const profileLabel = secondaryColor ? `${dominantColor} con influencia ${secondaryColor}` : dominantColor;
 
     setResult({ dominantColor, secondaryColor, profileLabel, counts, percentages });
-  };{ dominantColor, counts, percentages });
+  };
   };
 
   const downloadPDF = () => {
@@ -164,6 +164,7 @@ export default function InsightsTest() {
       doc.text(line, 20, y, { maxWidth: 170 });
       y += 10;
     });
+    y += 10;
       y += 10;
     });
     y += 10;
@@ -251,7 +252,7 @@ export default function InsightsTest() {
             <div style={{ marginTop: '2rem', backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Informe detallado</h3>
               <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
-                {communicationInsights[result.dominantColor].map((line, idx) => (
+                {(communicationInsights[result.profileLabel] || communicationInsights[result.dominantColor]).map((line, idx) => (
                   <li key={idx} style={{ backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '6px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', marginBottom: '0.5rem', fontSize: '0.95rem', lineHeight: '1.4', borderLeft: '4px solid #2563eb' }}>{line}</li>
                 ))}
               </ul>
