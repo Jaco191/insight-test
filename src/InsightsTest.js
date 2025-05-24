@@ -148,7 +148,6 @@ export default function InsightsTest() {
 
     setResult({ dominantColor, secondaryColor, profileLabel, counts, percentages });
   };
-  };
 
   const downloadPDF = () => {
     const doc = new jsPDF();
@@ -157,14 +156,11 @@ export default function InsightsTest() {
     doc.setFontSize(12);
     doc.text(`Nombre: ${userInfo.nombre}`, 20, 30);
     doc.text(`Email: ${userInfo.email}`, 20, 40);
-    doc.text(`Color predominante: ${result.dominantColor}`, 20, 50);
+    doc.text(`Perfil: ${result.profileLabel}`, 20, 50);
     let y = 60;
     const insightLines = communicationInsights[result.profileLabel] || communicationInsights[result.dominantColor];
     insightLines.forEach((line) => {
       doc.text(line, 20, y, { maxWidth: 170 });
-      y += 10;
-    });
-    y += 10;
       y += 10;
     });
     y += 10;
