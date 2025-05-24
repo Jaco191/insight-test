@@ -1,0 +1,63 @@
+/* Contenedor principal del componente */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+/* Fase de preguntas: ocupa toda la altura disponible */
+.full-height {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Barra de progreso */
+.progress-wrapper {
+  width: 100%;
+  background-color: #e0e0e0;
+  height: 8px;
+}
+.progress-bar {
+  background-color: #3cb44b;
+  height: 100%;
+  transition: width 0.3s;
+}
+
+/* Sección de preguntas */
+.question-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.question-card {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+/* Botones de opciones */
+.option-button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+/* Informe */
+.report-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+.chart-container {
+  width: 100%;
+  height: 300px;
+  margin-top: 1rem;
+}
