@@ -72,7 +72,7 @@ function generateReport(styles, scores) {
   const { dominant, secondary, conscious, unconscious } = styles;
   return {
     title: "Estilos de Comunicación Preferenciales",
-    perfil: { dominante: dominant, secundario: secondary, consciente, inconsciente: unconscious },
+    perfil: { dominante: dominant, secundario: secondary, consciente: conscious, inconsciente: unconscious },
     comportamientos: {
       buenDia: `En un buen día, tu estilo ${dominant} aporta energía, claridad y liderazgo, motivando al equipo y proponiendo soluciones con convicción.`,
       malDia: `En un mal día, tu estilo ${dominant} puede volverse autoritario o impaciente, generando tensiones si no moderas tu forma de comunicar.`
