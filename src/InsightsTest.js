@@ -1,5 +1,7 @@
 import { useState } from "react";
 import jsPDF from "jspdf";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 const questions = Array.from({ length: 20 }, (_, i) => {
   const q = [
@@ -36,15 +38,90 @@ const questions = Array.from({ length: 20 }, (_, i) => {
   };
 });
 
-const colorDescriptions = {
-  Rojo: "Directo, decidido, orientado a resultados. Te gusta liderar, actuar y avanzar rápido. Puedes parecer impaciente o autoritario si no regulas tu intensidad.",
-  Amarillo: "Sociable, entusiasta y comunicativo. Te expresas con facilidad y conectas con las personas. Puedes parecer disperso o poco estructurado si no equilibras tu energía.",
-  Verde: "Paciente, empático y cooperador. Prefieres la armonía y evitar conflictos. Puedes evitar confrontaciones importantes por preservar la relación.",
-  Azul: "Reflexivo, analítico y meticuloso. Buscas exactitud, rigor y planificación. Puedes parecer distante o lento para decidir si priorizas demasiado la perfección."
+const communicationInsights = {
+  "Amarillo con influencia Verde": [
+    "Estilo empático y positivo, con orientación a las personas.",
+    "Disfruta generando buen ambiente y evitando tensiones.",
+    "Puede mostrarse disperso o demasiado complaciente.",
+    "Recomendación: estructura tus ideas y pon límites claros.",
+    "Con perfiles analíticos: sé directo y aporta datos."
+  ],
+  "Amarillo con influencia Rojo": [
+    "Comunicador enérgico y persuasivo, combina entusiasmo con decisión.",
+    "Sabe contagiar ideas con intensidad y rapidez.",
+    "Puede parecer impulsivo o poco riguroso.",
+    "Recomendación: escucha más y ordena tus propuestas.",
+    "Con perfiles verdes: baja el ritmo, escucha más de lo que hablas."
+  ],
+  "Verde con influencia Azul": [
+    "Estilo cuidadoso, cooperador y reflexivo.",
+    "Ofrece apoyo sereno y sentido del deber.",
+    "Puede evitar confrontar o decidir con rapidez.",
+    "Recomendación: trabaja la proactividad y asertividad.",
+    "Con perfiles directivos: no temas expresar límites con firmeza."
+  ],
+  "Rojo con influencia Amarillo": [
+    "Comunicador muy directo pero cercano.",
+    "Impulsa decisiones rápidas con energía y persuasión.",
+    "Puede mostrarse impaciente y dominante si no regula su ritmo.",
+    "Recomendación: escucha activa y mejor gestión del entusiasmo.",
+    "Cuidado al tratar con perfiles analíticos: dales espacio y datos."
+  ],
+  "Rojo con influencia Azul": [
+    "Estilo firme y racional, muy enfocado a resultados y procedimientos.",
+    "Busca eficacia y orden, transmite estructura y control.",
+    "Puede parecer frío o inflexible con perfiles emocionales.",
+    "Recomendación: flexibilidad en la forma, manteniendo el fondo.",
+    "Toma en cuenta la parte humana en equipos sensibles."
+  ],
+  "Verde con influencia Amarillo": [
+    "Comunicador empático con un toque optimista y entusiasta.",
+    "Tiende a favorecer la armonía pero también contagia alegría.",
+    "Puede evitar conflictos necesarios o dispersarse.",
+    "Recomendación: claridad al poner límites y más foco.",
+    "Cuidado con los perfiles dominantes: mantener postura sin confrontar."
+  ],
+  "Azul con influencia Verde": [
+    "Estilo reflexivo, cuidadoso y diplomático.",
+    "Excelente para trabajos con detalle y relaciones sostenidas.",
+    "Puede tardar en decidir y mostrarse evasivo si hay presión.",
+    "Recomendación: trabajar la asertividad y priorizar.",
+    "Ante comunicadores rápidos: preparar mensajes claros y breves."
+  ],
+  Rojo: [
+    "Estilo natural: Directo, claro y enfocado en la acción. Prefiere hechos y resultados.",
+    "Buen día: Decidido y motivador, impulsa el avance con claridad.",
+    "Mal día: Impaciente o autoritario, puede interrumpir y no escuchar.",
+    "Recomendaciones: Escucha más, valida emociones, pregunta antes de afirmar.",
+    "Trato con Azules: Usa datos, evita presionar, respeta sus tiempos."
+  ],
+  Amarillo: [
+    "Estilo natural: Entusiasta y expresivo, comunica con energía y calidez.",
+    "Buen día: Genera entusiasmo y conexión.",
+    "Mal día: Puede divagar o no concretar.",
+    "Recomendaciones: Escucha más, estructura tus ideas, resume.",
+    "Trato con Azules: Sé claro, evita exageraciones, usa ejemplos concretos."
+  ],
+  Verde: [
+    "Estilo natural: Paciente y empático, evita el conflicto.",
+    "Buen día: Escucha activa, armonía, apoyo.",
+    "Mal día: Calla lo que piensa por evitar tensiones.",
+    "Recomendaciones: Afirma tus ideas, aprende a decir que no.",
+    "Trato con Rojos: Sé claro y directo, sin perder tu tono calmado."
+  ],
+  Azul: [
+    "Estilo natural: Analítico y preciso, comunica con lógica.",
+    "Buen día: Rigurosidad y claridad.",
+    "Mal día: Puede parecer distante o hipercrítico.",
+    "Recomendaciones: Sé más expresivo, acepta que no todo es perfecto.",
+    "Trato con Amarillos: Tolera la emoción, acepta ideas espontáneas."
+  ]
 };
 
+const COLORS = ['#ef4444', '#facc15', '#10b981', '#3b82f6'];
+
 export default function InsightsTest() {
-  const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState(Array(20).fill(null));
   const [result, setResult] = useState(null);
   const [userInfo, setUserInfo] = useState({ nombre: "", email: "" });
   const [started, setStarted] = useState(false);
@@ -64,8 +141,13 @@ export default function InsightsTest() {
     const percentages = Object.fromEntries(
       Object.entries(counts).map(([color, count]) => [color, ((count / total) * 100).toFixed(1)])
     );
-    const dominantColor = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-    setResult({ dominantColor, counts, percentages });
+    const sortedColors = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const dominantColor = sortedColors[0][0];
+    const secondaryColor = sortedColors[1] ? sortedColors[1][0] : null;
+    const profileLabel = secondaryColor ? `${dominantColor} con influencia ${secondaryColor}` : dominantColor;
+
+    setResult({ dominantColor, secondaryColor, profileLabel, counts, percentages });
+  };{ dominantColor, counts, percentages });
   };
 
   const downloadPDF = () => {
@@ -76,8 +158,15 @@ export default function InsightsTest() {
     doc.text(`Nombre: ${userInfo.nombre}`, 20, 30);
     doc.text(`Email: ${userInfo.email}`, 20, 40);
     doc.text(`Color predominante: ${result.dominantColor}`, 20, 50);
-    doc.text(colorDescriptions[result.dominantColor], 20, 60, { maxWidth: 170 });
-    let y = 90;
+    let y = 60;
+    const insightLines = communicationInsights[result.profileLabel] || communicationInsights[result.dominantColor];
+    insightLines.forEach((line) => {
+      doc.text(line, 20, y, { maxWidth: 170 });
+      y += 10;
+    });
+      y += 10;
+    });
+    y += 10;
     Object.entries(result.percentages).forEach(([color, percent]) => {
       doc.text(`${color}: ${percent}%`, 20, y);
       y += 10;
@@ -87,37 +176,22 @@ export default function InsightsTest() {
 
   if (!started) {
     return (
-      <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif' }}>
+      <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Antes de empezar, dinos quién eres</h2>
-        <input
-          type="text"
-          placeholder="Nombre"
-          value={userInfo.nombre}
-          onChange={(e) => setUserInfo({ ...userInfo, nombre: e.target.value })}
-          style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
-        />
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={userInfo.email}
-          onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-          style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
-        />
-        <button
-          onClick={() => userInfo.nombre && userInfo.email && setStarted(true)}
-          style={{ padding: '0.75rem 1.5rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-        >
+        <input type="text" placeholder="Nombre" value={userInfo.nombre} onChange={(e) => setUserInfo({ ...userInfo, nombre: e.target.value })} style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }} />
+        <input type="email" placeholder="Correo electrónico" value={userInfo.email} onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })} style={{ display: 'block', marginBottom: '1rem', padding: '0.5rem', width: '100%' }} />
+        <button onClick={() => userInfo.nombre && userInfo.email && setStarted(true)} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
           Empezar test
         </button>
       </div>
     );
   }
 
-  const progress = Math.round((answers.filter(Boolean).length / questions.length) * 100);
+  const progress = Math.round((answers.filter(Boolean).length / 20) * 100);
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif', color: '#1f2937' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center', color: '#111827' }}>
+    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', textAlign: 'center' }}>
         Test de Estilo de Comunicación - Modelo Insights
       </h1>
 
@@ -128,26 +202,26 @@ export default function InsightsTest() {
         </div>
       </div>
 
-      {questions.map((q, i) => (
-        <div key={q.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', backgroundColor: '#f9fafb' }}>
+      {Array.from({ length: 20 }).map((_, i) => (
+        <div key={i} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', backgroundColor: '#f9fafb' }}>
           <p style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Pregunta {i + 1}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {q.options.map((opt, j) => (
+            {["Rojo", "Amarillo", "Verde", "Azul"].map((color, j) => (
               <button
                 key={j}
-                onClick={() => handleAnswer(i, opt.color)}
+                onClick={() => handleAnswer(i, color)}
                 style={{
                   padding: '0.75rem',
                   borderRadius: '6px',
-                  border: answers[i] === opt.color ? '2px solid #2563eb' : '1px solid #d1d5db',
-                  backgroundColor: answers[i] === opt.color ? '#dbeafe' : 'white',
+                  border: answers[i] === color ? '2px solid #2563eb' : '1px solid #d1d5db',
+                  backgroundColor: answers[i] === color ? '#dbeafe' : 'white',
                   cursor: 'pointer',
                   width: '100%',
                   fontWeight: '500',
                   textAlign: 'left'
                 }}
               >
-                {opt.text}
+                {questions[i].options[j].text}
               </button>
             ))}
           </div>
@@ -158,51 +232,50 @@ export default function InsightsTest() {
         <button
           onClick={calculateResult}
           disabled={answers.includes(null)}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: answers.includes(null) ? 'not-allowed' : 'pointer',
-            fontSize: '1rem',
-            fontWeight: '600'
-          }}
+          style={{ padding: '0.75rem 1.5rem', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: answers.includes(null) ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: '600' }}
         >
           Ver resultado
         </button>
       </div>
 
       {result && (
-        <div style={{ marginTop: '2.5rem', padding: '1.5rem', border: '1px solid #d1d5db', borderRadius: '10px', backgroundColor: '#ffffff' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem', color: '#111827' }}>Resultado</h2>
-          <p style={{ marginBottom: '1rem' }}>
-            Tu color predominante es: <strong>{result.dominantColor}</strong>
-          </p>
-          <p style={{ fontStyle: 'italic', marginBottom: '1rem', color: '#374151' }}>{colorDescriptions[result.dominantColor]}</p>
-          <ul style={{ marginBottom: '1rem' }}>
-            {Object.entries(result.percentages).map(([color, percent]) => (
-              <li key={color}>{color}: {percent}%</li>
-            ))}
-          </ul>
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={downloadPDF}
-              style={{
-                marginTop: '1rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              Descargar PDF
-            </button>
+        <>
+          <div style={{ marginTop: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>Tu perfil es: {result.profileLabel}</h2>
+            <p style={{ marginBottom: '1rem', fontStyle: 'italic' }}>{communicationInsights[result.dominantColor][0]}</p>
+            <div style={{ marginBottom: '1rem' }}>
+              {Object.entries(result.percentages).map(([color, percent]) => (
+                <p key={color}>{color}: {percent}%</p>
+              ))}
+            </div>
+            <div style={{ marginTop: '2rem', backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Informe detallado</h3>
+              <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
+                {communicationInsights[result.dominantColor].map((line, idx) => (
+                  <li key={idx} style={{ backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '6px', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', marginBottom: '0.5rem', fontSize: '0.95rem', lineHeight: '1.4', borderLeft: '4px solid #2563eb' }}>{line}</li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ marginTop: '2rem' }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={Object.entries(result.counts).map(([name, value]) => ({ name, value }))} cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} dataKey="value">
+                    {Object.entries(result.counts).map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button onClick={downloadPDF} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', fontWeight: '600' }}>
+                Descargar PDF
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
