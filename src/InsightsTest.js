@@ -8,33 +8,38 @@ const OPPOSITES = { Rojo: "Verde", Verde: "Rojo", Amarillo: "Azul", Azul: "Amari
 const WEIGHTS = { "Muy identificado": 3, "Bastante identificado": 2, "Poco identificado": 1, "Nada identificado": 0 };
 const CHART_COLORS = { Rojo: "#e6194b", Amarillo: "#ffe119", Verde: "#3cb44b", Azul: "#4363d8" };
 
-// 25 preguntas para identificar estilos de comunicación
+// 30 preguntas para identificar estilos de comunicación
 const questions = [
-  { id: 1, text: "Cuando participo en una reunión, suelo expresar mis ideas con firmeza." },
-  { id: 2, text: "Me encanta animar y motivar a los demás con mi energía." },
-  { id: 3, text: "Prefiero planificar cada paso antes de lanzarme a la acción." },
-  { id: 4, text: "Me adapto fácilmente cuando cambian las circunstancias." },
-  { id: 5, text: "Me baso en datos y hechos antes de tomar una decisión." },
-  { id: 6, text: "Cuando lidero un equipo, me centro en resultados y objetivos." },
-  { id: 7, text: "Valoro más la armonía y la colaboración que el conflicto." },
-  { id: 8, text: "Me siento cómodo asumiendo riesgos y tomando la iniciativa." },
-  { id: 9, text: "Suelo ofrecer apoyo y escucha cuando otros comparten sus problemas." },
-  { id: 10, text: "Tengo tendencia a centrarme en la visión global en lugar de los detalles." },
-  { id: 11, text: "Me esfuerzo por asegurarme de que todos se sientan incluidos." },
-  { id: 12, text: "Cuando hablo, uso ejemplos concretos para apoyar mis argumentos." },
-  { id: 13, text: "Disfruto trabajando en proyectos que requieren creatividad e innovación." },
-  { id: 14, text: "Me siento incómodo con la improvisación y prefiero seguir procedimientos." },
-  { id: 15, text: "Me gusta inspirar a otros y persuadirlos para que sigan mi visión." },
-  { id: 16, text: "Cuando tomo decisiones, considero siempre el impacto en las personas." },
-  { id: 17, text: "Me centro en medir resultados y en establecer métricas claras." },
-  { id: 18, text: "Mantengo la calma bajo presión y busco soluciones prácticas." },
-  { id: 19, text: "Busco retroalimentación constructiva y comparto mis descubrimientos." },
-  { id: 20, text: "Suelo ser directo y claro, incluso con noticias difíciles." },
-  { id: 21, text: "Disfruto incluyendo detalles y contexto para asegurar comprensión." },
-  { id: 22, text: "Inspiro confianza mostrando mi entusiasmo y pasión." },
-  { id: 23, text: "Me esfuerzo por escuchar activamente sin interrumpir a los demás." },
-  { id: 24, text: "Me hago responsable de mis errores y busco soluciones inmediatas." },
-  { id: 25, text: "Cuando algo no sale según lo planeado, analizo detenidamente cada detalle antes de actuar." }
+  { id: 1, text: "Cuando participo en una reunión, suelo expresar mis ideas con firmeza, incluso si no todo el mundo está de acuerdo." },
+  { id: 2, text: "Me entusiasma contagiar mi energía cuando presento ideas a un grupo." },
+  { id: 3, text: "Antes de actuar, necesito tener muy claro el proceso y los pasos a seguir." },
+  { id: 4, text: "Me resulta natural adaptarme a lo que ocurre, incluso cuando cambian los planes de forma repentina." },
+  { id: 5, text: "Tiendo a buscar datos concretos y evidencias antes de tomar una decisión." },
+  { id: 6, text: "Cuando lidero, me enfoco en que se cumplan los objetivos sin desviarnos." },
+  { id: 7, text: "Me esfuerzo por mantener un ambiente armónico y evitar confrontaciones innecesarias." },
+  { id: 8, text: "Me gusta iniciar proyectos nuevos, incluso si implican cierto riesgo o incertidumbre." },
+  { id: 9, text: "Cuando alguien está pasando por un mal momento, me sale escuchar con empatía y sin juzgar." },
+  { id: 10, text: "Prefiero centrarme en la visión general más que en los detalles minuciosos." },
+  { id: 11, text: "Procuro que todas las personas del equipo se sientan tenidas en cuenta." },
+  { id: 12, text: "Uso ejemplos concretos y verificables cuando explico mis argumentos." },
+  { id: 13, text: "Disfruto proponiendo ideas nuevas y creativas, aunque parezcan poco convencionales." },
+  { id: 14, text: "Me siento incómodo cuando hay que improvisar sin planificación previa." },
+  { id: 15, text: "Me gusta inspirar a otros a través de una visión compartida que genere ilusión." },
+  { id: 16, text: "Antes de decidir, valoro cómo puede afectar emocionalmente a las personas implicadas." },
+  { id: 17, text: "Me gusta trabajar con indicadores claros para medir avances y resultados." },
+  { id: 18, text: "Cuando hay presión o conflicto, tiendo a mantener la calma y buscar soluciones prácticas." },
+  { id: 19, text: "Comparto ideas y aprendizajes con entusiasmo para que otros puedan aprovecharlos." },
+  { id: 20, text: "Puedo comunicar mensajes difíciles de forma directa, aunque no siempre sean bien recibidos." },
+  { id: 21, text: "Me esfuerzo en dar contexto y detalles para que todo el mundo comprenda bien la situación." },
+  { id: 22, text: "Transmito confianza a los demás gracias a mi entusiasmo y actitud positiva." },
+  { id: 23, text: "Escucho con atención y evito interrumpir, incluso cuando quiero aportar mi punto de vista." },
+  { id: 24, text: "Cuando cometo un error, lo reconozco y busco cómo solucionarlo sin demora." },
+  { id: 25, text: "Si algo no sale como esperaba, reviso con detalle qué ha fallado antes de tomar decisiones nuevas." },
+  { id: 26, text: "Cuando quiero causar buena impresión, adapto mi forma de comunicarme al estilo del interlocutor." },
+  { id: 27, text: "En situaciones tensas, suelo volverme más impaciente o más directo de lo habitual." },
+  { id: 28, text: "Bajo presión, prefiero tomar decisiones rápidas en lugar de analizar cada posibilidad." },
+  { id: 29, text: "Cuando me siento juzgado, tiendo a guardar más silencio o a suavizar mis opiniones." },
+  { id: 30, text: "En contextos sociales, soy más expresivo o extrovertido que cuando estoy en un entorno profesional." }
 ];
 
 const options = [
@@ -58,17 +63,18 @@ function interpretStyles(scores) {
   return { dominant: sorted[0][0], secondary: sorted[1][0] };
 }
 
+// Informe más detallado
 function generateReport(interpretation, scores) {
   const { dominant, secondary } = interpretation;
   return {
     title: "Estilos de Comunicación Preferenciales",
     perfil: `Dominante: ${dominant}. Secundario: ${secondary}.`,
     comportamientos: {
-      buenDia: `Buen día: tu estilo ${dominant} aporta liderazgo y claridad.`,
-      malDia: `Mal día: tu estilo ${dominant} puede volverse rígido e impaciente.`
+      buenDia: `En un buen día, tu estilo ${dominant} se manifiesta con energía positiva y claridad en el mensaje. Tiendes a tomar la iniciativa, influir en el rumbo de la conversación y motivar al equipo para alcanzar objetivos ambiciosos. Mantienes un enfoque proactivo, proponiendo soluciones innovadoras y liderando con convicción.`,
+      malDia: `En un mal día, tu estilo ${dominant} puede volverse excesivamente autoritario o impaciente. Puedes mostrar rigidez ante ideas que difieran de tu visión y tender a tomar decisiones precipitadas sin considerar el impacto emocional en los demás. Es importante reconocer estos patrones para neutralizar posibles tensiones.`
     },
-    recomendaciones: `Combina tu ${dominant} con la empatía de ${secondary}. Practica escucha activa y flexibilidad.`,
-    relacion: `Opuesto: ${OPPOSITES[dominant]}. Adapta tu tono para ser más pausado y detallado.`,
+    recomendaciones: `Para mejorar tu comunicación, combina la determinación de tu estilo ${dominant} con la empatía natural de ${secondary}. Practica la escucha activa, formulando preguntas abiertas para comprender mejor las perspectivas ajenas. Trabaja en modular tu tono y ritmo para crear un ambiente de diálogo cooperativo y reducir posibles malentendidos.`,
+    relacion: `Tu color opuesto es ${OPPOSITES[dominant]}. Para conectar de manera efectiva, adapta tu mensaje usando un lenguaje más pausado, con ejemplos concretos y espacio para el análisis detallado. Demuestra aprecio por la precisión y los datos, y evita imponer tu visión de manera abrupta.`,
     chartData: COLORS.map(col => ({ name: col, value: scores[col] }))
   };
 }
@@ -86,10 +92,7 @@ export default function CommunicationStylesTest() {
   if (step < questions.length) {
     return (
       <div
-        style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', minHeight: '100vh', padding: '1rem'
-        }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem' }}
       >
         <div style={{ width: '100%', maxWidth: 600, textAlign: 'center' }}>
           <h2>{questions[step].text}</h2>
@@ -120,21 +123,18 @@ export default function CommunicationStylesTest() {
     doc.setFontSize(12);
     doc.text(report.perfil, 14, 30);
     doc.text(report.comportamientos.buenDia, 14, 40);
-    doc.text(report.comportamientos.malDia, 14, 50);
-    doc.text(report.recomendaciones, 14, 60);
-    doc.text(report.relacion, 14, 70);
+    doc.text(report.comportamientos.malDia, 14, 60);
+    doc.text(report.recomendaciones, 14, 80);
+    doc.text(report.relacion, 14, 100);
     const canvas = chartRef.current.querySelector('canvas');
     const imgData = canvas.toDataURL('image/png');
-    doc.addImage(imgData, 'PNG', 14, 80, 180, 90);
+    doc.addImage(imgData, 'PNG', 14, 120, 180, 90);
     doc.save('Estilos_Comunicacion_Preferenciales.pdf');
   };
 
   return (
     <div
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        padding: '1rem'
-      }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem' }}
     >
       <h1 style={{ textAlign: 'center' }}>{report.title}</h1>
       <p style={{ textAlign: 'center' }}>{report.perfil}</p>
@@ -150,7 +150,7 @@ export default function CommunicationStylesTest() {
         <div ref={chartRef} style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={report.chartData} dataKey="value" nameKey="name" outerRadius={100} label>
+              <Pie data={report.chartData} dataKey="value" nameKey="name" outerRadius={100} label startAngle={45} endAngle={-315}>
                 {report.chartData.map(entry => (
                   <Cell key={entry.name} fill={CHART_COLORS[entry.name]} />
                 ))}
@@ -161,10 +161,7 @@ export default function CommunicationStylesTest() {
           </ResponsiveContainer>
         </div>
         <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-          <button
-            onClick={generatePDF}
-            style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}
-          >
+          <button onClick={generatePDF} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', borderRadius: 4, cursor: 'pointer' }}>
             Descargar informe
           </button>
         </div>
