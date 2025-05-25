@@ -272,31 +272,48 @@ export default function CommunicationStylesTest() {
 
 
 
-  return (
-    <div className="report-container">
-      <h1>{name}, tus resultados</h1>
-      <p><strong>Perfil dominante:</strong> {report.perfil.dominante}</p>
-      <p><strong>Perfil secundario:</strong> {report.perfil.secundario}</p>
-      <div className="chart-container" ref={chartRef}>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie data={report.chartData} dataKey="value" nameKey="name" outerRadius={100}>
-              {report.chartData.map((entry) => (
-                <Cell key={entry.name} fill={CHART_COLORS[entry.name]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <p><strong>Buen día:</strong> {report.comportamientos.buenDia}</p>
-      <p><strong>Mal día:</strong> {report.comportamientos.malDia}</p>
-      <p><strong>Recomendaciones:</strong> {report.recomendaciones}</p>
-      <p><strong>Relación con color opuesto:</strong> {report.relacion}</p>
-      <button onClick={generatePDF} className="option-button" style={{ marginTop: '1rem' }}>
-        Descargar informe
-      </button>
+return (
+  <div className="report-container">
+    <h1>{name}, tus resultados</h1>
+    <p><strong>Perfil dominante:</strong> {report.perfil.dominante}</p>
+    <p><strong>Perfil secundario:</strong> {report.perfil.secundario}</p>
+
+    <div className="chart-container" ref={chartRef}>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={report.chartData}
+            dataKey="value"
+            nameKey="name"
+            outerRadius={100}
+            startAngle={45}
+            endAngle={-315}
+            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          >
+            {report.chartData.map((entry) => (
+              <Cell key={entry.name} fill={CHART_COLORS[entry.name]} />
+            ))}
+          </Pie>
+
+          <Tooltip
+            formatter={(value: number) => {
+              const total = report.chartData.reduce((sum, e) => sum + e.value, 0);
+              return [`${value}`, `${((value / total) * 100).toFixed(0)}%`];
+            }}
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
-  );
+
+    <p><strong>Buen día:</strong> {report.comportamientos.buenDia}</p>
+    <p><strong>Mal día:</strong> {report.comportamientos.malDia}</p>
+    <p><strong>Recomendaciones:</strong> {report.recomendaciones}</p>
+    <p><strong>Relación con color opuesto:</strong> {report.relacion}</p>
+
+    <button onClick={generatePDF} className="option-button" style={{ marginTop: '1rem' }}>
+      Descargar informe
+    </button>
+  </div>
+);
 }
