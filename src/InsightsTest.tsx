@@ -199,27 +199,78 @@ export default function CommunicationStylesTest() {
   const styles = interpretStyles(scores);
   const report = generateReport(styles, scores);
 
-  const generatePDF = async () => {
-    if (!chartRef.current) return;
-    setTimeout(async () => {
-      const canvas = await html2canvas(chartRef.current!, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      doc.setFontSize(18);
-      doc.text(`${name} - ${report.title}`, 40, 60);
-      doc.setFontSize(12);
-      doc.text(`Perfil: Dominante ${report.perfil.dominante}, Secundario ${report.perfil.secundario}`, 40, 90);
-      doc.text(report.comportamientos.buenDia, 40, 120);
-      doc.text(report.comportamientos.malDia, 40, 140);
-      doc.text(`Recomendaciones: ${report.recomendaciones}`, 40, 170);
-      doc.text(`Relación con opuesto: ${report.relacion}`, 40, 200);
-      const props = doc.getImageProperties(imgData);
-      const pdfWidth = doc.internal.pageSize.getWidth() - 80;
-      const pdfHeight = (props.height * pdfWidth) / props.width;
-      doc.addImage(imgData, "PNG", 40, 240, pdfWidth, pdfHeight);
-      doc.save(`Test_Comunicacion_${name}.pdf`);
-    }, 0);
-  };
+    const generatePDF = async () => {
+  if (!chartRef.current) return;
+  const margin = 40;
+  const pageWidth = 595.28; // ancho A4 en puntos
+  const usableWidth = pageWidth - margin * 2;
+
+  setTimeout(async () => {
+    const canvas = await html2canvas(chartRef.current!, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+    // 1. Título centrado y en negrita
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${name} - ${report.title}`, pageWidth / 2, 60, {
+      align: "center",
+    });
+
+    // 2. Perfil centrado
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Perfil: Dominante ${report.perfil.dominante}, Secundario ${report.perfil.secundario}`,
+      pageWidth / 2,
+      90,
+      { align: "center", maxWidth: usableWidth }
+    );
+
+    // 3. Buen día
+    doc.setFont("helvetica", "bold");
+    doc.text("Buen día:", margin, 120);
+    doc.setFont("helvetica", "normal");
+    doc.text(report.comportamientos.buenDia, margin + 60, 120, {
+      maxWidth: usableWidth - 60,
+    });
+
+    // 4. Mal día
+    doc.setFont("helvetica", "bold");
+    doc.text("Mal día:", margin, 150);
+    doc.setFont("helvetica", "normal");
+    doc.text(report.comportamientos.malDia, margin + 60, 150, {
+      maxWidth: usableWidth - 60,
+    });
+
+    // 5. Recomendaciones
+    doc.setFont("helvetica", "bold");
+    doc.text("Recomendaciones:", margin, 180);
+    doc.setFont("helvetica", "normal");
+    doc.text(report.recomendaciones, margin + 120, 180, {
+      maxWidth: usableWidth - 120,
+    });
+
+    // 6. Relación con opuesto
+    doc.setFont("helvetica", "bold");
+    doc.text("Relación con opuesto:", margin, 210);
+    doc.setFont("helvetica", "normal");
+    doc.text(report.relacion, margin + 160, 210, {
+      maxWidth: usableWidth - 160,
+    });
+
+    // 7. Gráfica centrada
+    const props = doc.getImageProperties(imgData);
+    const imgWidth = usableWidth;
+    const imgHeight = (props.height * imgWidth) / props.width;
+    doc.addImage(imgData, "PNG", margin, 240, imgWidth, imgHeight);
+
+    // 8. Guarda
+    doc.save(`Test_Comunicacion_${name}.pdf`);
+  }, 0);
+};
+
+
 
   return (
     <div className="report-container">
