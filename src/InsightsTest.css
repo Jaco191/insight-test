@@ -19,11 +19,15 @@
   box-sizing: border-box;
 }
 
-/* Barra de progreso */
+/* Barra de progreso centrada */
 .progress-wrapper {
-  width: 100%;
+  width: 80%;           /* ancho reducido para centrar mejor */
+  max-width: 600px;
+  margin: 1rem auto;    /* espacio y centrado horizontal */
   background-color: #e0e0e0;
   height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 .progress-bar {
   background-color: #3cb44b;
@@ -37,7 +41,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 1rem;
   text-align: center;
 }
@@ -49,8 +53,8 @@
 .question-card p {
   font-weight: bold;
   font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+  font-size: 1.32rem;    /* 20% más grande */
+  margin-bottom: 1.5rem;
 }
 
 /* Contenedor de opciones, alineadas verticalmente */
