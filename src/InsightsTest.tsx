@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, FormEvent } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {
@@ -41,9 +41,9 @@ const CHART_COLORS: Record<Color, string> = {
   Azul: "#4363d8",
 };
 
-
 // Preguntas
-const questions = [
+type Question = { id: number; text: string; color: Color };
+const questions: Question[] = [
   { id: 1, text: "Cuando participo en una reunión, suelo expresar mis ideas con firmeza, incluso si no todo el mundo está de acuerdo.", color: "Rojo" },
   { id: 2, text: "Me entusiasma contagiar mi energía cuando presento ideas a un grupo.", color: "Amarillo" },
   { id: 3, text: "Antes de actuar, necesito tener muy claro el proceso y los pasos a seguir.", color: "Azul" },
@@ -86,22 +86,19 @@ const options: { label: WeightLabel }[] = [
   { label: "Nada identificado" },
 ];
 
-// Cálculo de puntuaciones
 function calculateScores(answers: Answer[]): Scores {
   const scores: Scores = { Rojo: 0, Amarillo: 0, Verde: 0, Azul: 0 };
   answers.forEach(({ id, answer }) => {
     const question = questions.find((q) => q.id === id)!;
-    const color = question.color as Color;
+    const color = question.color;
     scores[color] += WEIGHTS[answer];
   });
   return scores;
 }
 
-// Interpretación de estilos con umbral “Mixto”
 function interpretStyles(scores: Scores): Styles {
-  const sorted = (Object.entries(scores) as [Color, number][]).sort(
-    (a, b) => b[1] - a[1]
-  );
+  const entries = Object.entries(scores) as [Color, number][];
+  const sorted = entries.sort((a, b) => b[1] - a[1]);
   const [dominante, secundario] = sorted;
   const delta = dominante[1] - secundario[1];
   const inconsciente: Color | "Mixto" = delta < 4 ? "Mixto" : secundario[0];
@@ -113,44 +110,74 @@ function interpretStyles(scores: Scores): Styles {
   };
 }
 
-// Generación del informe
 function generateReport(styles: Styles, scores: Scores): Report {
   const { dominante, secundario, consciente, inconsciente } = styles;
+  const total = Object.values(scores).reduce((a, b) => a + b, 0);
+  const chartData = COLORS.map((col) => ({ name: col, value: scores[col] }));
   return {
     title: "Estilos de Comunicación Preferenciales",
     perfil: { dominante, secundario, consciente, inconsciente },
     comportamientos: {
-      buenDia: `En un buen día, tu estilo ${dominante} aporta energía, claridad y liderazgo.`,
-      malDia: `En un mal día, tu estilo ${dominante} puede volverse autoritario o impaciente.`,
+      buenDia: `En un buen día, tu estilo ${dominante} muestra lo mejor de ti: confianza, claridad y liderazgo, inspirando a tu equipo y facilitando decisiones efectivas.`,
+      malDia: `En un mal día, tu estilo ${dominante} puede volverse excesivamente autoritario o impaciente, dificultando la colaboración y generando tensiones.`,
     },
-    recomendaciones: `Combina tu ${consciente} con la empatía de ${secundario}.`,
-    relacion: `Tu color opuesto es ${OPPOSITES[dominante]}.`,
-    chartData: COLORS.map((col) => ({ name: col, value: scores[col] })),
+    recomendaciones: `Para equilibrar tu estilo ${consciente}, practica la escucha activa, adapta tu tono al interlocutor y combina tu energía con la empatía de ${secundario}.`,
+    relacion: `Tu color opuesto es ${OPPOSITES[dominante]}. Incorpora un enfoque pausado, basado en datos y en las emociones de los demás para conectar mejor.`,
+    chartData,
   };
 }
 
 export default function CommunicationStylesTest() {
-  const [step, setStep] = useState<number>(0);
+  const [name, setName] = useState<string>("");
+  const [started, setStarted] = useState(false);
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleStart = (e: FormEvent) => {
+    e.preventDefault();
+    if (name.trim()) setStarted(true);
+  };
 
   const handleSelect = (answer: WeightLabel) => {
     setAnswers((prev) => [...prev, { id: questions[step].id, answer }]);
     setStep((prev) => prev + 1);
   };
 
+  // Página de inicio
+  if (!started) {
+    return (
+      <div className="container">
+        <h1>Test de Estilos de Comunicación</h1>
+        <p>Responde pensando lo primero que se te venga a la cabeza.</p>
+        <form onSubmit={handleStart} className="start-form">
+          <input
+            type="text"
+            placeholder="Introduce tu nombre"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <button type="submit">Comenzar</button>
+        </form>
+      </div>
+    );
+  }
+
+  // Cuestionario
   if (step < questions.length) {
     const progress = Math.round((step / questions.length) * 100);
+    const question = questions[step];
     return (
       <div className="full-height">
+        <h2>{name}, pregunta {step + 1} de {questions.length}</h2>
         <div className="progress-wrapper">
           <div className="progress-bar" style={{ width: `${progress}%` }} />
         </div>
         <div className="question-section">
           <div className="question-card">
-            <h2>{questions[step].text}</h2>
-            <p>{progress}% completado</p>
-            <div>
+            <p>{question.text}</p>
+            <div className="options-container">
               {options.map((opt) => (
                 <button
                   key={opt.label}
@@ -167,6 +194,7 @@ export default function CommunicationStylesTest() {
     );
   }
 
+  // Resultados
   const scores = calculateScores(answers);
   const styles = interpretStyles(scores);
   const report = generateReport(styles, scores);
@@ -178,30 +206,27 @@ export default function CommunicationStylesTest() {
       const imgData = canvas.toDataURL("image/png");
       const doc = new jsPDF({ unit: "pt", format: "a4" });
       doc.setFontSize(18);
-      doc.text(report.title, 40, 60);
+      doc.text(`${name} - ${report.title}`, 40, 60);
       doc.setFontSize(12);
-      doc.text(`Dominante: ${report.perfil.dominante}`, 40, 90);
-      doc.text(`Secundario: ${report.perfil.secundario}`, 40, 110);
-      doc.text(`Consciente: ${report.perfil.consciente}`, 40, 130);
-      doc.text(`Inconsciente: ${report.perfil.inconsciente}`, 40, 150);
-      doc.text(report.comportamientos.buenDia, 40, 180);
-      doc.text(report.comportamientos.malDia, 40, 200);
-      doc.text(report.recomendaciones, 40, 220);
-      doc.text(report.relacion, 40, 240);
+      doc.text(`Perfil: Dominante ${report.perfil.dominante}, Secundario ${report.perfil.secundario}`, 40, 90);
+      doc.text(report.comportamientos.buenDia, 40, 120);
+      doc.text(report.comportamientos.malDia, 40, 140);
+      doc.text(`Recomendaciones: ${report.recomendaciones}`, 40, 170);
+      doc.text(`Relación con opuesto: ${report.relacion}`, 40, 200);
       const props = doc.getImageProperties(imgData);
       const pdfWidth = doc.internal.pageSize.getWidth() - 80;
       const pdfHeight = (props.height * pdfWidth) / props.width;
-      doc.addImage(imgData, "PNG", 40, 260, pdfWidth, pdfHeight);
-      doc.save("Estilos_Comunicacion_Preferenciales.pdf");
+      doc.addImage(imgData, "PNG", 40, 240, pdfWidth, pdfHeight);
+      doc.save(`Test_Comunicacion_${name}.pdf`);
     }, 0);
   };
 
   return (
     <div className="report-container">
-      <h1>{report.title}</h1>
-      <p>Dominante: {report.perfil.dominante} | Secundario: {report.perfil.secundario}</p>
-      <p>Consciente: {report.perfil.consciente} | Inconsciente: {report.perfil.inconsciente}</p>
-      <div className="chart-container">
+      <h1>{name}, tus resultados</h1>
+      <p><strong>Perfil dominante:</strong> {report.perfil.dominante}</p>
+      <p><strong>Perfil secundario:</strong> {report.perfil.secundario}</p>
+      <div className="chart-container" ref={chartRef}>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie data={report.chartData} dataKey="value" nameKey="name" outerRadius={100}>
@@ -214,6 +239,10 @@ export default function CommunicationStylesTest() {
           </PieChart>
         </ResponsiveContainer>
       </div>
+      <p><strong>Buen día:</strong> {report.comportamientos.buenDia}</p>
+      <p><strong>Mal día:</strong> {report.comportamientos.malDia}</p>
+      <p><strong>Recomendaciones:</strong> {report.recomendaciones}</p>
+      <p><strong>Relación con color opuesto:</strong> {report.relacion}</p>
       <button onClick={generatePDF} className="option-button" style={{ marginTop: '1rem' }}>
         Descargar informe
       </button>
