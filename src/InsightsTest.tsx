@@ -28,12 +28,15 @@ const OPPOSITES: Record<Color, Color> = {
   Amarillo: "Azul",
   Azul: "Amarillo",
 };
+
+// 1. Escala de pesos 1–4 (después restamos 1 para base 0–3)
 const WEIGHTS: Record<WeightLabel, number> = {
-  "Muy identificado": 3,
-  "Bastante identificado": 2,
-  "Poco identificado": 1,
-  "Nada identificado": 0,
+  "Muy identificado": 4,
+  "Bastante identificado": 3,
+  "Poco identificado": 2,
+  "Nada identificado": 1,
 };
+
 const CHART_COLORS: Record<Color, string> = {
   Rojo: "#e6194b",
   Amarillo: "#ffe119",
@@ -41,7 +44,7 @@ const CHART_COLORS: Record<Color, string> = {
   Azul: "#4363d8",
 };
 
-// Preguntas
+// Preguntas (resumido aquí por brevedad)
 type Question = { id: number; text: string; color: Color };
 const questions: Question[] = [
   { id: 1, text: "Cuando participo en una reunión, suelo expresar mis ideas con firmeza, incluso si no todo el mundo está de acuerdo.", color: "Rojo" },
@@ -86,43 +89,54 @@ const options: { label: WeightLabel }[] = [
   { label: "Nada identificado" },
 ];
 
+// 2. calculateScores con base 0–3
 function calculateScores(answers: Answer[]): Scores {
   const scores: Scores = { Rojo: 0, Amarillo: 0, Verde: 0, Azul: 0 };
   answers.forEach(({ id, answer }) => {
-    const question = questions.find((q) => q.id === id)!;
-    const color = question.color;
-    scores[color] += WEIGHTS[answer];
+    const color = questions.find((q) => q.id === id)!.color;
+    scores[color] += WEIGHTS[answer] - 1;
   });
   return scores;
 }
 
+// 3. interpretStyles: dominante, secundario o "Mixto", inconsciente = mínimo
 function interpretStyles(scores: Scores): Styles {
-  const entries = Object.entries(scores) as [Color, number][];
-  const sorted = entries.sort((a, b) => b[1] - a[1]);
-  const [dominante, secundario] = sorted;
-  const delta = dominante[1] - secundario[1];
-  const inconsciente: Color | "Mixto" = delta < 4 ? "Mixto" : secundario[0];
-  return {
-    dominante: dominante[0],
-    secundario: secundario[0],
-    consciente: dominante[0],
-    inconsciente,
-  };
+  const entries = (Object.entries(scores) as [Color, number][])
+    .sort((a, b) => b[1] - a[1]);
+  const dominante = entries[0][0];
+  const delta = entries[0][1] - entries[1][1];
+  const secundario: Color | "Mixto" = delta <= 2 ? "Mixto" : entries[1][0];
+  const inconsciente = entries[entries.length - 1][0];
+  return { dominante, secundario, consciente: dominante, inconsciente };
 }
 
+// 4. generateReport con % y consejos ajustados
 function generateReport(styles: Styles, scores: Scores): Report {
-  const { dominante, secundario, consciente, inconsciente } = styles;
-  const total = Object.values(scores).reduce((a, b) => a + b, 0);
-  const chartData = COLORS.map((col) => ({ name: col, value: scores[col] }));
+  const { dominante, secundario, inconsciente } = styles;
+  const maxScore = 3 * 8; // 8 preguntas por color, base máxima 3
+  const chartData = COLORS.map((color) => ({
+    name: color,
+    value: scores[color],
+    percent: Math.round((scores[color] / maxScore) * 100),
+  }));
+
+  const opposite = OPPOSITES[dominante];
+  const oppositeAdvice: Record<Color, string> = {
+    Amarillo: `Tu color opuesto es Amarillo. Conecta con ligereza y storytelling emocional.`,
+    Azul:     `Tu color opuesto es Azul. Prepárate con datos y estructura tus argumentos.`,
+    Verde:    `Tu color opuesto es Verde. Practica la escucha activa y reconoce logros personales.`,
+    Rojo:     `Tu color opuesto es Rojo. Ve al grano con mensajes claros y directos.`,
+  };
+
   return {
     title: "Estilos de Comunicación Preferenciales",
-    perfil: { dominante, secundario, consciente, inconsciente },
+    perfil: { dominante, secundario, consciente: dominante, inconsciente },
     comportamientos: {
-      buenDia: `En un buen día, tu estilo ${dominante} muestra lo mejor de ti: confianza, claridad y liderazgo, inspirando a tu equipo y facilitando decisiones efectivas.`,
-      malDia: `En un mal día, tu estilo ${dominante} puede volverse excesivamente autoritario o impaciente, dificultando la colaboración y generando tensiones.`,
+      buenDia: `Un buen día, tu estilo ${dominante} destaca por confianza y liderazgo efectivos.`,
+      malDia:  `Un mal día, tu estilo ${dominante} puede tornarse impaciente o autoritario.`,
     },
-    recomendaciones: `Para equilibrar tu estilo ${consciente}, practica la escucha activa, adapta tu tono al interlocutor y combina tu energía con la empatía de ${secundario}.`,
-    relacion: `Tu color opuesto es ${OPPOSITES[dominante]}. Incorpora un enfoque pausado, basado en datos y en las emociones de los demás para conectar mejor.`,
+    recomendaciones: `Equilibra tu energía ${dominante} con empatía: practica preguntas abiertas.`,
+    relacion: oppositeAdvice[opposite],
     chartData,
   };
 }
@@ -138,7 +152,6 @@ export default function CommunicationStylesTest() {
     e.preventDefault();
     if (name.trim()) setStarted(true);
   };
-
   const handleSelect = (answer: WeightLabel) => {
     setAnswers((prev) => [...prev, { id: questions[step].id, answer }]);
     setStep((prev) => prev + 1);
@@ -199,121 +212,100 @@ export default function CommunicationStylesTest() {
   const styles = interpretStyles(scores);
   const report = generateReport(styles, scores);
 
-    const generatePDF = async () => {
-  if (!chartRef.current) return;
-  const margin = 40;
-  const pageWidth = 595.28; // ancho A4 en puntos
-  const usableWidth = pageWidth - margin * 2;
+  const generatePDF = async () => {
+    if (!chartRef.current) return;
+    const margin = 40;
+    const pageWidth = 595.28;
+    const usableWidth = pageWidth - margin * 2;
 
-  setTimeout(async () => {
-    const canvas = await html2canvas(chartRef.current!, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    setTimeout(async () => {
+      const canvas = await html2canvas(chartRef.current!, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
 
-    // 1. Título centrado y en negrita
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${name} - ${report.title}`, pageWidth / 2, 60, {
-      align: "center",
-    });
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${name} - ${report.title}`, pageWidth / 2, 60, { align: "center" });
 
-    // 2. Perfil centrado
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `Perfil: Dominante ${report.perfil.dominante}, Secundario ${report.perfil.secundario}`,
-      pageWidth / 2,
-      90,
-      { align: "center", maxWidth: usableWidth }
-    );
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Perfil: Dominante ${report.perfil.dominante}, Secundario ${report.perfil.secundario}`,
+        pageWidth / 2,
+        90,
+        { align: "center", maxWidth: usableWidth }
+      );
 
-    // 3. Buen día
-    doc.setFont("helvetica", "bold");
-    doc.text("Buen día:", margin, 120);
-    doc.setFont("helvetica", "normal");
-    doc.text(report.comportamientos.buenDia, margin + 60, 120, {
-      maxWidth: usableWidth - 60,
-    });
+      doc.setFont("helvetica", "bold");
+      doc.text("Buen día:", margin, 120);
+      doc.setFont("helvetica", "normal");
+      doc.text(report.comportamientos.buenDia, margin + 60, 120, { maxWidth: usableWidth - 60 });
 
-    // 4. Mal día
-    doc.setFont("helvetica", "bold");
-    doc.text("Mal día:", margin, 150);
-    doc.setFont("helvetica", "normal");
-    doc.text(report.comportamientos.malDia, margin + 60, 150, {
-      maxWidth: usableWidth - 60,
-    });
+      doc.setFont("helvetica", "bold");
+      doc.text("Mal día:", margin, 150);
+      doc.setFont("helvetica", "normal");
+      doc.text(report.comportamientos.malDia, margin + 60, 150, { maxWidth: usableWidth - 60 });
 
-    // 5. Recomendaciones
-    doc.setFont("helvetica", "bold");
-    doc.text("Recomendaciones:", margin, 180);
-    doc.setFont("helvetica", "normal");
-    doc.text(report.recomendaciones, margin + 120, 180, {
-      maxWidth: usableWidth - 120,
-    });
+      doc.setFont("helvetica", "bold");
+      doc.text("Recomendaciones:", margin, 180);
+      doc.setFont("helvetica", "normal");
+      doc.text(report.recomendaciones, margin + 120, 180, { maxWidth: usableWidth - 120 });
 
-    // 6. Relación con opuesto
-    doc.setFont("helvetica", "bold");
-    doc.text("Relación con opuesto:", margin, 210);
-    doc.setFont("helvetica", "normal");
-    doc.text(report.relacion, margin + 160, 210, {
-      maxWidth: usableWidth - 160,
-    });
+      doc.setFont("helvetica", "bold");
+      doc.text("Relación con opuesto:", margin, 210);
+      doc.setFont("helvetica", "normal");
+      doc.text(report.relacion, margin + 160, 210, { maxWidth: usableWidth - 160 });
 
-    // 7. Gráfica centrada
-    const props = doc.getImageProperties(imgData);
-    const imgWidth = usableWidth;
-    const imgHeight = (props.height * imgWidth) / props.width;
-    doc.addImage(imgData, "PNG", margin, 240, imgWidth, imgHeight);
+      const props = doc.getImageProperties(imgData);
+      const imgWidth = usableWidth;
+      const imgHeight = (props.height * imgWidth) / props.width;
+      doc.addImage(imgData, "PNG", margin, 240, imgWidth, imgHeight);
 
-    // 8. Guarda
-    doc.save(`Test_Comunicacion_${name}.pdf`);
-  }, 0);
-};
+      doc.save(`Test_Comunicacion_${name}.pdf`);
+    }, 0);
+  };
 
+  return (
+    <div className="report-container">
+      <h1>{name}, tus resultados</h1>
+      <p><strong>Perfil dominante:</strong> {report.perfil.dominante}</p>
+      <p><strong>Perfil secundario:</strong> {report.perfil.secundario}</p>
 
+      <div className="chart-container" ref={chartRef}>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={report.chartData}
+              dataKey="value"
+              nameKey="name"
+              outerRadius={100}
+              startAngle={45}
+              endAngle={-315}
+              label={({ name, percent }) => `${name}: ${percent}%`}
+            >
+              {report.chartData.map((entry) => (
+                <Cell key={entry.name} fill={CHART_COLORS[entry.name]} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value: number) => {
+                const total = report.chartData.reduce((sum, e) => sum + e.value, 0);
+                return [`${value}`, `${((value / total) * 100).toFixed(0)}%`];
+              }}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
 
-return (
-  <div className="report-container">
-    <h1>{name}, tus resultados</h1>
-    <p><strong>Perfil dominante:</strong> {report.perfil.dominante}</p>
-    <p><strong>Perfil secundario:</strong> {report.perfil.secundario}</p>
+      <p><strong>Buen día:</strong> {report.comportamientos.buenDia}</p>
+      <p><strong>Mal día:</strong> {report.comportamientos.malDia}</p>
+      <p><strong>Recomendaciones:</strong> {report.recomendaciones}</p>
+      <p><strong>Relación con color opuesto:</strong> {report.relacion}</p>
 
-    <div className="chart-container" ref={chartRef}>
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={report.chartData}
-            dataKey="value"
-            nameKey="name"
-            outerRadius={100}
-            startAngle={45}
-            endAngle={-315}
-            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-          >
-            {report.chartData.map((entry) => (
-              <Cell key={entry.name} fill={CHART_COLORS[entry.name]} />
-            ))}
-          </Pie>
-
-          <Tooltip
-            formatter={(value: number) => {
-              const total = report.chartData.reduce((sum, e) => sum + e.value, 0);
-              return [`${value}`, `${((value / total) * 100).toFixed(0)}%`];
-            }}
-          />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
+      <button onClick={generatePDF} className="option-button" style={{ marginTop: '1rem' }}>
+        Descargar informe
+      </button>
     </div>
-
-    <p><strong>Buen día:</strong> {report.comportamientos.buenDia}</p>
-    <p><strong>Mal día:</strong> {report.comportamientos.malDia}</p>
-    <p><strong>Recomendaciones:</strong> {report.recomendaciones}</p>
-    <p><strong>Relación con color opuesto:</strong> {report.relacion}</p>
-
-    <button onClick={generatePDF} className="option-button" style={{ marginTop: '1rem' }}>
-      Descargar informe
-    </button>
-  </div>
-);
+  );
 }

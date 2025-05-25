@@ -35,7 +35,7 @@ export interface Scores {
 // Estilos resultantes
 export interface Styles {
   dominante: Color;
-  secundario: Color;
+  secundario: Color | "Mixto";
   consciente: Color;
   inconsciente: Color | "Mixto";
 }
@@ -45,7 +45,7 @@ export interface Report {
   title: string;
   perfil: {
     dominante: Color;
-    secundario: Color;
+    secundario: Color | "Mixto";
     consciente: Color;
     inconsciente: Color | "Mixto";
   };
@@ -55,5 +55,5 @@ export interface Report {
   };
   recomendaciones: string;
   relacion: string;
-  chartData: { name: Color; value: number }[];
+  chartData: { name: Color; value: number; percent?: number }[];
 }
